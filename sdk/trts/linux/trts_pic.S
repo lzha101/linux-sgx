@@ -553,8 +553,11 @@ DECLARE_LOCAL_FUNC continue_execution
     mov     SE_WORDSIZE*1(%xcx), %xax
     push    %xax                       # push xcx
     mov     SE_WORDSIZE*4(%xcx), %xax
+#ifdef LINUX32 
     sub     $(SE_WORDSIZE), %xax       # xax: xsp
-
+#else
+    sub     $(SE_WORDSIZE*17), %xax    # xax: xsp. SE_WORDSIZE*17: 128-bytes red zone + space to save xip
+#endif
 # restore registers except xax, xcx, xsp
     mov     SE_WORDSIZE*2(%xcx), %xdx
     mov     SE_WORDSIZE*3(%xcx), %xbx
@@ -589,4 +592,8 @@ DECLARE_LOCAL_FUNC continue_execution
     pop     %xcx                       # restore xcx
     pop     %xsp                       # xsp: xax
     xchg    %xax, %xsp
+#ifdef LINUX32
     ret
+#else 
+    ret     $(SE_WORDSIZE*16)         # restore xip and xsp
+#endif
